@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+monkapp-frontend/node_modules/
+
+# Build output
+monkapp-frontend/dist/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+monkapp-frontend/.env
+monkapp-frontend/.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java / Maven
+monkapp-backend/target/
+*.class
+*.jar
+*.log
+
+# Vercel
+.vercel
