@@ -25,7 +25,7 @@ export default function Ventas() {
     descuento: '', concepto: '', numeroCuotas: 1
   })
 
-  const cargar = () => ventaService.listar().then(r => setVentas(r.data))
+  const cargar = () => ventaService.listar().then(r => setVentas(Array.isArray(r.data) ? r.data : [])).catch(() => setVentas([]))
 
   useEffect(() => {
     cargar()
@@ -103,12 +103,12 @@ export default function Ventas() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {ventas.length === 0 ? (
+        {Array.isArray(ventas) && ventas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '52px 0', color: 'var(--text-secondary)' }}>
             <ShoppingCart size={44} color="var(--border)" style={{ marginBottom: 10 }} />
             <p style={{ fontSize: 14 }}>Sin ventas registradas</p>
           </div>
-        ) : ventas.map(v => {
+        ) : Array.isArray(ventas) ? ventas.map(v => {
           const bc = badgeColor[v.estado] || badgeColor.ACTIVA
           return (
             <div key={v.id} style={{
@@ -142,7 +142,7 @@ export default function Ventas() {
               </div>
             </div>
           )
-        })}
+        }) : null}
       </div>
 
       {showForm && (
