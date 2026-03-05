@@ -11,7 +11,23 @@ export function ConfigProvider({ children }) {
   useEffect(() => {
     configuracionService.obtener()
       .then(r => setConfig(r.data))
-      .catch(() => toast.error('Error cargando configuración'))
+      .catch((err) => {
+        console.warn('[v0] Error cargando configuración:', err.response?.status)
+        // Si el endpoint no existe, usa configuración por defecto
+        setConfig({
+          modoOscuro: false,
+          notifCobro: true,
+          notifStockBajo: true,
+          notifProveedores: true,
+          modoOffline: false,
+          backupAutomatico: false,
+          twoFactor: false,
+          historialAuditoria: false,
+          colorPrimario: '#6C63FF',
+          colorSecundario: '#00D4FF',
+          umbralStock: 5,
+        })
+      })
       .finally(() => setLoadingConfig(false))
   }, [])
 
