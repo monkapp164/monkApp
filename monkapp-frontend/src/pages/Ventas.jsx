@@ -23,6 +23,9 @@ export default function Ventas() {
   const [clienteVenta, setClienteVenta] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  // Mapa de clientes por ID para búsqueda rápida
+  const clientesMap = useMemo(() => Object.fromEntries(clientes.map(c => [c.id, c])), [clientes])
+
   // distribute pending saldo per cliente so total deuda controls display
   const distributedVentas = useMemo(() => {
     const remainingMap = {}
@@ -48,7 +51,7 @@ export default function Ventas() {
 
   const cargar = () => ventaService.listar().then(r => setVentas(Array.isArray(r.data) ? r.data : [])).catch(() => setVentas([]))
 
-  const cargarClienteYVentas = async (id) => {debugger
+  const cargarClienteYVentas = async (id) => {
     setLoading(true)
     try {
       const [ventasRes, clienteRes] = await Promise.all([
@@ -134,15 +137,17 @@ export default function Ventas() {
 
   const abrirDetalle = async (venta) => {
     setVentaSeleccionada(venta)
-    if (venta.cliente && venta.cliente.id) {
+    // Intenta obtener el cliente si existe clienteId
+    if (venta.clienteId) {
       try {
-        const { data } = await clienteService.obtener(venta.cliente.id)
+        const { data } = await clienteService.obtener(venta.clienteId)
         setClienteVenta(data)
       } catch (e) {
-        console.error(e)
+        console.error('Error al obtener cliente:', e)
         setClienteVenta(null)
       }
     } else {
+      console.warn('La venta no tiene clienteId:', venta)
       setClienteVenta(null)
     }
   }
@@ -226,7 +231,7 @@ export default function Ventas() {
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   {v.fecha} · {v.metodoPago}
-                  {v.cliente && ` · ${v.cliente.nombre}`}
+                  {v.clienteId && ` · ${clientesMap[v.clienteId]?.nombre}`}  {/* Cambiado: usar clientesMap */}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -281,8 +286,7 @@ export default function Ventas() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Cliente:</span>
                   <span style={{ fontWeight: 600 }}>
-                    {clienteVenta ? clienteVenta.nombre : (ventaSeleccionada.cliente?.nombre || 'Sin cliente')}
-                  {console.log(clienteVenta,ventaSeleccionada)}
+                    {clienteVenta ? clienteVenta.nombre : (ventaSeleccionada.clienteId ? clientesMap[ventaSeleccionada.clienteId]?.clienteNombre : 'Sin cliente')}  {/* Cambiado: usar clienteVenta o clientesMap */}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
