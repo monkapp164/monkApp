@@ -54,7 +54,7 @@ export default function Dashboard() {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))',
         gap: 14, marginBottom: 28
       }}>
-        <StatCard titulo="Por Cobrar" valor={data?.totalPorCobrar} color="#6C63FF" icon={TrendingUp} />
+        <StatCard titulo="Por Cobrar" valor={data?.totalPorCobrar} color="var(--primary)" icon={TrendingUp} />
         <StatCard titulo="Por Pagar" valor={data?.totalPorPagar} color="#EF4444" icon={TrendingDown} />
         <StatCard titulo="Clientes" valor={data?.totalClientes} color="#22C55E" icon={Users} prefix="" />
         <StatCard titulo="Productos" valor={data?.totalProductos} color="#F59E0B" icon={Package} prefix="" />

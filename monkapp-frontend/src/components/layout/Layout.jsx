@@ -46,12 +46,12 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 12,
-              background: 'linear-gradient(135deg,#6C63FF,#FF6584)',
+              background: 'linear-gradient(135deg,var(--primary),var(--secondary))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20
             }}>🐒</div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 17, color: '#6C63FF', lineHeight: 1.1 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--primary)', lineHeight: 1.1 }}>
                 MonkApp
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
@@ -72,7 +72,7 @@ export default function Layout({ children }) {
                 textDecoration: 'none', fontWeight: isActive ? 700 : 500,
                 fontSize: 14, transition: 'all 0.15s',
                 background: isActive ? 'var(--primary-light)' : 'transparent',
-                color: isActive ? '#6C63FF' : 'var(--text-secondary)',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
               })}>
               <Icon size={17} />
               {label}
@@ -96,7 +96,7 @@ export default function Layout({ children }) {
           <button onClick={handleLogout} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: 10,
             padding: '10px 14px', borderRadius: 10, border: 'none',
-            background: 'transparent', color: '#EF4444', cursor: 'pointer',
+            background: 'transparent', color: 'var(--danger)', cursor: 'pointer',
             fontWeight: 600, fontSize: 13,
           }}>
             <LogOut size={15} /> Cerrar sesión
@@ -112,7 +112,7 @@ export default function Layout({ children }) {
           padding: '0 20px', height: 58,
           display: 'flex', alignItems: 'center', gap: 14,
           position: 'sticky', top: 0, zIndex: 50,
-          boxShadow: '0 1px 8px rgba(108,99,255,0.05)'
+          boxShadow: 'var(--shadow-sm)'
         }}>
           <button onClick={() => setOpen(o => !o)} style={{
             width: 36, height: 36, borderRadius: 8,
@@ -124,7 +124,7 @@ export default function Layout({ children }) {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 20 }}>🐒</span>
-            <span style={{ fontWeight: 800, fontSize: 16, color: '#6C63FF' }}>MonkApp</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary)' }}>MonkApp</span>
           </div>
         </header>
 

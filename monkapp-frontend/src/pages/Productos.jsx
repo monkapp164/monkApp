@@ -58,7 +58,7 @@ export default function Productos() {
         <h1 style={{ fontSize: 22, fontWeight: 800 }}>Productos 📦</h1>
         <button onClick={() => setShowForm(true)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-          background: '#6C63FF', color: '#fff', border: 'none',
+          background: 'var(--primary)', color: '#fff', border: 'none',
           borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14,
         }}>
           <Plus size={16} /> Nuevo
@@ -106,7 +106,7 @@ export default function Productos() {
             </div>
             {p.categoria && (
               <span style={{
-                fontSize: 11, background: 'var(--primary-light)', color: '#6C63FF',
+                fontSize: 11, background: 'var(--primary-light)', color: 'var(--primary)',
                 padding: '2px 8px', borderRadius: 20, fontWeight: 600
               }}>
                 {p.categoria}
@@ -114,7 +114,7 @@ export default function Productos() {
             )}
             <div style={{ marginTop: 12, display: 'flex',
                           justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#6C63FF' }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
                 ${Number(p.precio).toLocaleString('es-CO')}
               </span>
               {p.tieneInventario ? (
@@ -193,7 +193,7 @@ export default function Productos() {
                   borderRadius: 10, background: 'none', cursor: 'pointer', fontWeight: 600
                 }}>Cancelar</button>
                 <button type="submit" style={{
-                  flex: 1, padding: '12px', background: '#6C63FF', color: '#fff',
+                  flex: 1, padding: '12px', background: 'var(--primary)', color: '#fff',
                   border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600
                 }}>Guardar</button>
               </div>

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useEffect, useState, useMemo } from 'react'
+import { useLocation, useParams } from 'react-router-dom'
 import { ventaService, clienteService, productoService } from '../services'
 import { Plus, ShoppingCart } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -7,16 +7,37 @@ import toast from 'react-hot-toast'
 const METODOS = ['EFECTIVO','TARJETA','TRANSFERENCIA','NEQUI','DAVIPLATA','OTRO']
 
 const badgeColor = {
-  ACTIVA:  { bg: '#EEF2FF', color: '#6C63FF' },
+  ACTIVA:  { bg: 'var(--primary-light)', color: 'var(--primary)' },
   PAGADA:  { bg: '#DCFCE7', color: '#16A34A' },
   ANULADA: { bg: 'var(--primary-light)', color: 'var(--text-secondary)' },
 }
 
 export default function Ventas() {
   const location = useLocation()
+  const { clienteId } = useParams()
   const [ventas, setVentas] = useState([])
   const [clientes, setClientes] = useState([])
   const [productos, setProductos] = useState([])
+  const [ventaSeleccionada, setVentaSeleccionada] = useState(null)
+  const [cliente, setCliente] = useState(null)
+  const [clienteVenta, setClienteVenta] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  // distribute pending saldo per cliente so total deuda controls display
+  const distributedVentas = useMemo(() => {
+    const remainingMap = {}
+    clientes.forEach(c => {
+      remainingMap[c.id] = Number(c.deudaTotal) || 0
+    })
+    return ventas.map(v => {
+      const owed = Number(v.saldoPendiente || 0)
+      const rem = remainingMap[v.clienteId] || 0
+      const displaySaldo = rem > 0 ? Math.min(owed, rem) : 0
+      remainingMap[v.clienteId] = Math.max(0, rem - displaySaldo)
+      return { ...v, displaySaldo }
+    })
+  }, [ventas, clientes])
+
   const [showForm, setShowForm] = useState(false)
   const [tipo, setTipo] = useState('CON_INVENTARIO')
   const [items, setItems] = useState([{ productoId: '', nombreProducto: '', precioUnitario: '', cantidad: 1 }])
@@ -27,11 +48,33 @@ export default function Ventas() {
 
   const cargar = () => ventaService.listar().then(r => setVentas(Array.isArray(r.data) ? r.data : [])).catch(() => setVentas([]))
 
+  const cargarClienteYVentas = async (id) => {debugger
+    setLoading(true)
+    try {
+      const [ventasRes, clienteRes] = await Promise.all([
+        ventaService.listarPorCliente(id),
+        clienteService.obtener(id),
+      ])
+      setVentas(Array.isArray(ventasRes.data) ? ventasRes.data : [])
+      setCliente(clienteRes.data)
+    } catch (e) {
+      console.error(e)
+      toast.error('Error al cargar datos del cliente')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    cargar()
     clienteService.listar().then(r => setClientes(r.data))
     productoService.listar().then(r => setProductos(r.data))
-  }, [])
+    
+    if (clienteId) {
+      cargarClienteYVentas(clienteId)
+    } else {
+      cargar()
+    }
+  }, [clienteId])
 
   useEffect(() => {
     if (location.state?.clienteId) {
@@ -79,10 +122,34 @@ export default function Ventas() {
       setShowForm(false)
       setItems([{ productoId: '', nombreProducto: '', precioUnitario: '', cantidad: 1 }])
       setForm({ metodoPago:'EFECTIVO', clienteId:'', abonoInicial:'', descuento:'', concepto:'', numeroCuotas:1 })
-      cargar()
+      if (clienteId) {
+        cargarClienteYVentas(clienteId)
+      } else {
+        cargar()
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error al registrar')
     }
+  }
+
+  const abrirDetalle = async (venta) => {
+    setVentaSeleccionada(venta)
+    if (venta.cliente && venta.cliente.id) {
+      try {
+        const { data } = await clienteService.obtener(venta.cliente.id)
+        setClienteVenta(data)
+      } catch (e) {
+        console.error(e)
+        setClienteVenta(null)
+      }
+    } else {
+      setClienteVenta(null)
+    }
+  }
+
+  const cerrarDetalle = () => {
+    setVentaSeleccionada(null)
+    setClienteVenta(null)
   }
 
   const sel = { padding: '9px 10px', border: '1.5px solid var(--border)',
@@ -92,15 +159,46 @@ export default function Ventas() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between',
                     alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800 }}>Ventas 🛒</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800 }}>
+          {cliente ? `Ventas de ${cliente.nombre}` : 'Ventas 🛒'}
+        </h1>
         <button onClick={() => setShowForm(true)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-          background: '#6C63FF', color: '#fff', border: 'none',
+          background: 'var(--primary)', color: '#fff', border: 'none',
           borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14,
         }}>
           <Plus size={16} /> Nueva Venta
         </button>
       </div>
+
+      {/* Información del cliente si está filtrando */}
+      {cliente && (
+        <div style={{
+          background: 'var(--primary-light)', borderRadius: 12, padding: '16px',
+          marginBottom: 20, border: '1px solid var(--primary)'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block' }}>Nombre</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)' }}>{cliente.nombre}</span>
+            </div>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block' }}>Teléfono</span>
+              <span style={{ fontSize: 14, fontWeight: 700 }}>{cliente.telefono || '-'}</span>
+            </div>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block' }}>Correo</span>
+              <span style={{ fontSize: 14, fontWeight: 700 }}>{cliente.correo || '-'}</span>
+            </div>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block' }}>Deuda Total</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: cliente.deudaTotal > 0 ? '#EF4444' : '#22C55E' }}>
+                ${Number(cliente.deudaTotal || 0).toLocaleString('es-CO')}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {Array.isArray(ventas) && ventas.length === 0 ? (
@@ -108,15 +206,20 @@ export default function Ventas() {
             <ShoppingCart size={44} color="var(--border)" style={{ marginBottom: 10 }} />
             <p style={{ fontSize: 14 }}>Sin ventas registradas</p>
           </div>
-        ) : Array.isArray(ventas) ? ventas.map(v => {
+        ) : Array.isArray(distributedVentas) ? distributedVentas.map(v => {
           const bc = badgeColor[v.estado] || badgeColor.ACTIVA
           return (
-            <div key={v.id} style={{
+            <div key={v.id}
+                 onClick={() => abrirDetalle(v)}
+                 style={{
               background: 'var(--card)', borderRadius: 12, padding: '14px 16px',
               boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
               display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', border: '1px solid var(--border)'
-            }}>
+              alignItems: 'center', border: '1px solid var(--border)',
+              cursor: 'pointer'
+            }}
+                 onMouseEnter={e => e.currentTarget.style.boxShadow = '0 1px 8px rgba(0,0,0,0.1)'}
+                 onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 6px rgba(0,0,0,0.04)'}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>
                   {v.concepto || `Venta #${v.id}`}
@@ -127,12 +230,12 @@ export default function Ventas() {
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 800, color: '#6C63FF', fontSize: 15 }}>
+                <div style={{ fontWeight: 800, color: 'var(--primary)', fontSize: 15 }}>
                   ${Number(v.total).toLocaleString('es-CO')}
                 </div>
-                {Number(v.saldoPendiente) > 0 && (
+                {Number(v.displaySaldo) > 0 && (
                   <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 600, marginBottom: 2 }}>
-                    Pendiente: ${Number(v.saldoPendiente).toLocaleString('es-CO')}
+                    Pendiente: ${Number(v.displaySaldo).toLocaleString('es-CO')}
                   </div>
                 )}
                 <span style={{
@@ -144,6 +247,163 @@ export default function Ventas() {
           )
         }) : null}
       </div>
+
+      {/* details modal for selected sale */}
+      {ventaSeleccionada && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 210, padding: 20
+        }}>
+          <div style={{ background: 'var(--card)', borderRadius: 20, padding: '32px',
+                        width: '100%', maxWidth: 500, maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
+                Detalles de Venta #{ventaSeleccionada.id}
+              </h2>
+              <button onClick={cerrarDetalle} style={{
+                width: 32, height: 32, borderRadius: 8, border: '1.5px solid var(--border)',
+                background: 'none', cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)'
+              }}>×</button>
+            </div>
+
+            {/* general info */}
+            <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
+                Información General
+              </h3>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Fecha:</span>
+                  <span style={{ fontWeight: 600 }}>{ventaSeleccionada.fecha}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Cliente:</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {clienteVenta ? clienteVenta.nombre : (ventaSeleccionada.cliente?.nombre || 'Sin cliente')}
+                  {console.log(clienteVenta,ventaSeleccionada)}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Tipo:</span>
+                  <span style={{ fontWeight: 600 }}>{ventaSeleccionada.tipoVenta === 'CON_INVENTARIO' ? 'Con productos' : 'Venta libre'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Método de pago:</span>
+                  <span style={{ fontWeight: 600 }}>{ventaSeleccionada.metodoPago || 'No especificado'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Estado:</span>
+                  <span style={{ fontWeight: 600, color: ventaSeleccionada.estado === 'PAGADA' ? 'var(--success)' : 'var(--warning)' }}>
+                    {ventaSeleccionada.estado || 'ACTIVA'}
+                  </span>
+                </div>
+                {ventaSeleccionada.numeroCuotas && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Cuotas:</span>
+                    <span style={{ fontWeight: 600 }}>{ventaSeleccionada.numeroCuotas}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* info del cliente ampliada */}
+            {clienteVenta && (
+              <div style={{ background: 'var(--primary-light)', padding: 16, borderRadius: 12, border: '1px solid var(--primary)', marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary)', marginBottom: 12 }}>
+                  Información del Cliente
+                </h3>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Identificación:</span>
+                    <span style={{ fontWeight: 600 }}>{clienteVenta.identificacion || '-'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Teléfono:</span>
+                    <span style={{ fontWeight: 600 }}>{clienteVenta.telefono || '-'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Correo:</span>
+                    <span style={{ fontWeight: 600 }}>{clienteVenta.correo || '-'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Deuda Total:</span>
+                    <span style={{ fontWeight: 600, color: clienteVenta.deudaTotal > 0 ? '#EF4444' : '#22C55E' }}>
+                      ${Number(clienteVenta.deudaTotal || 0).toLocaleString('es-CO')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* products list */}
+            {(ventaSeleccionada.detalles || ventaSeleccionada.productos) && (ventaSeleccionada.detalles || ventaSeleccionada.productos).length > 0 && (
+              <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 16 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
+                  Productos
+                </h3>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {(ventaSeleccionada.detalles || ventaSeleccionada.productos).map((detalle, index) => (
+                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--card)', borderRadius: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{detalle.nombreProducto || detalle.nombre}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                          Cantidad: {detalle.cantidad}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                          ${Number(detalle.precioUnitario || detalle.precio).toLocaleString('es-CO')}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                          Subtotal: ${((detalle.precioUnitario || detalle.precio) * detalle.cantidad).toLocaleString('es-CO')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* financial summary */}
+            <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>
+                Resumen Financiero
+              </h3>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Subtotal:</span>
+                  <span style={{ fontWeight: 600 }}>${Number(ventaSeleccionada.total + (ventaSeleccionada.descuento || 0)).toLocaleString('es-CO')}</span>
+                </div>
+                {(ventaSeleccionada.descuento || 0) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Descuento:</span>
+                    <span style={{ fontWeight: 600 }}>${Number(ventaSeleccionada.descuento).toLocaleString('es-CO')}</span>
+                  </div>
+                )}
+                {ventaSeleccionada.abonoInicial && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Abono inicial:</span>
+                    <span style={{ fontWeight: 600 }}>${Number(ventaSeleccionada.abonoInicial).toLocaleString('es-CO')}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Total:</span>
+                  <span style={{ fontWeight: 600 }}>${Number(ventaSeleccionada.total).toLocaleString('es-CO')}</span>
+                </div>
+                {Number(ventaSeleccionada.saldoPendiente) > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>Saldo pendiente:</span>
+                    <span style={{ fontWeight: 600, color: 'var(--warning)' }}>${Number(ventaSeleccionada.saldoPendiente).toLocaleString('es-CO')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={{
@@ -162,9 +422,9 @@ export default function Ventas() {
                   setTipo(t)
                   setItems([{ productoId:'', nombreProducto:'', precioUnitario:'', cantidad:1 }])
                 }} style={{
-                  flex: 1, padding: '9px', border: `2px solid ${tipo === t ? '#6C63FF' : 'var(--border)'}`,
+                  flex: 1, padding: '9px', border: `2px solid ${tipo === t ? 'var(--primary)' : 'var(--border)'}`,
                   borderRadius: 10, background: tipo === t ? 'var(--primary-light)' : 'var(--card)',
-                  color: tipo === t ? '#6C63FF' : 'var(--text-secondary)', cursor: 'pointer',
+                  color: tipo === t ? 'var(--primary)' : 'var(--text-secondary)', cursor: 'pointer',
                   fontWeight: 600, fontSize: 13,
                 }}>{label}</button>
               ))}
@@ -207,7 +467,7 @@ export default function Ventas() {
                 ))}
                 <button type="button"
                   onClick={() => setItems([...items, { productoId:'', nombreProducto:'', precioUnitario:'', cantidad:1 }])}
-                  style={{ fontSize: 13, color: '#6C63FF', background: 'none',
+                  style={{ fontSize: 13, color: 'var(--primary)', background: 'none',
                            border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                   + Agregar ítem
                 </button>
@@ -272,7 +532,7 @@ export default function Ventas() {
                 <div style={{ display: 'flex', justifyContent: 'space-between',
                               borderTop: '1px solid var(--border)', paddingTop: 6, marginTop: 4 }}>
                   <strong>Total</strong>
-                  <strong style={{ color: '#6C63FF' }}>${Math.max(0,total).toLocaleString('es-CO')}</strong>
+                  <strong style={{ color: 'var(--primary)' }}>${Math.max(0,total).toLocaleString('es-CO')}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Saldo pendiente</span>
@@ -288,7 +548,7 @@ export default function Ventas() {
                   borderRadius: 10, background: 'none', cursor: 'pointer', fontWeight: 600
                 }}>Cancelar</button>
                 <button type="submit" style={{
-                  flex: 1, padding: '12px', background: '#6C63FF', color: '#fff',
+                  flex: 1, padding: '12px', background: 'var(--primary)', color: '#fff',
                   border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600
                 }}>Registrar Venta</button>
               </div>

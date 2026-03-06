@@ -49,7 +49,7 @@ export default function Clientes() {
         <h1 style={{ fontSize: 22, fontWeight: 800 }}>Clientes 👥</h1>
         <button onClick={() => setShowForm(true)} style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-          background: '#6C63FF', color: '#fff', border: 'none', borderRadius: 10,
+          background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 10,
           cursor: 'pointer', fontWeight: 600, fontSize: 14,
         }}>
           <Plus size={16} /> Nuevo
@@ -88,7 +88,7 @@ export default function Clientes() {
               <div style={{
                 width: 40, height: 40, borderRadius: '50%', background: '#EEF2FF',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 800, color: '#6C63FF', fontSize: 15, flexShrink: 0
+                fontWeight: 800, color: 'var(--primary)', fontSize: 15, flexShrink: 0
               }}>
                 {c.nombre.charAt(0).toUpperCase()}
               </div>
@@ -144,7 +144,7 @@ export default function Clientes() {
                   borderRadius: 10, background: 'none', cursor: 'pointer', fontWeight: 600
                 }}>Cancelar</button>
                 <button type="submit" disabled={loading} style={{
-                  flex: 1, padding: '12px', background: '#6C63FF', color: '#fff',
+                  flex: 1, padding: '12px', background: 'var(--primary)', color: '#fff',
                   border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600
                 }}>{loading ? 'Guardando...' : 'Guardar'}</button>
               </div>

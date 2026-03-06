@@ -37,6 +37,7 @@ export const ventaService = {
 export const abonoService = {
   listarPorCliente: (clienteId) => api.get(`/abonos/cliente/${clienteId}`),
   registrar: (d) => api.post('/abonos', d),
+  registrarPorVenta: (ventaId, d) => api.post(`/abonos/venta/${ventaId}`, d),
 }
 
 export const gastoService = {
