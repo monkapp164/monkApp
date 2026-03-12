@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import logo from '../../img/logo.png'
 import toast from 'react-hot-toast'
 
 const inputStyle = {
@@ -45,13 +46,12 @@ export default function Login() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{
-            width: 72, height: 72, borderRadius: 20, margin: '0 auto 16px',
-            background: 'linear-gradient(135deg,#6C63FF,#FF6584)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36
-          }}>🐒</div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>
-            MonkApp
-          </h1>
+            width: 72, height: 72, borderRadius: 20, margin: '0 auto 16px',           
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <img src={logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
+          </div>
+         
           <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Inicia sesión en tu cuenta</p>
         </div>
 

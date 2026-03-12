@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import logo from '../../img/logo.png'
 import {
   LayoutDashboard, Users, Package, ShoppingCart,
   Wallet, Settings, LogOut, Menu, X, ChevronRight
@@ -49,7 +50,9 @@ export default function Layout({ children }) {
               background: 'linear-gradient(135deg,var(--primary),var(--secondary))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20
-            }}>🐒</div>
+            }}>
+              <img src={logo} alt="MonkApp logo" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: 8 }} />
+            </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--primary)', lineHeight: 1.1 }}>
                 MonkApp
@@ -123,7 +126,7 @@ export default function Layout({ children }) {
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 20 }}>🐒</span>
+            <img src={logo} alt="MonkApp logo" style={{ width: 20, height: 20, objectFit: 'contain' }} />
             <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary)' }}>MonkApp</span>
           </div>
         </header>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authService } from '../../services'
+import logo from '../../img/logo.png'
 import toast from 'react-hot-toast'
 
 const inputStyle = {
@@ -47,10 +48,11 @@ export default function Registro() {
         <div style={{ textAlign: 'center', marginBottom: 30 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18, margin: '0 auto 14px',
-            background: 'linear-gradient(135deg,#6C63FF,#FF6584)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30
-          }}>🐒</div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <img src={logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 4, marginTop:'50px'}}>
             Crear cuenta
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Empieza a organizar tu negocio</p>
