@@ -93,7 +93,7 @@ export default function Layout({ children }) {
         </nav>
 
         {/* User info */}
-        <div style={{ padding: '12px 10px 16px', borderTop: '1px solid var(--border)'}}>
+        <div style={{ padding: '14px 10px 58px', borderTop: '1px solid var(--border)'}}>
           <div style={{padding: '10px 14px', borderRadius: 10, background: 'var(--bg)', marginBottom: 6, border: '1.5px solid var(--primary)', display: 'flex', gap: 4}}>
             <div style={{width:20}}>
             </div>
