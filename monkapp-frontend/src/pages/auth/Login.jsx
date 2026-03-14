@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useConfig } from '../../context/ConfigContext'
+import Spinner from '../../components/common/Spinner'
 import logo from '../../img/logo.png'
+import logo1 from '../../img/logo1.png'
 import toast from 'react-hot-toast'
 
 const inputStyle = {
@@ -17,6 +20,7 @@ export default function Login() {
   const [form, setForm] = useState({ cedula: '', password: '' })
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { config } = useConfig()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -24,6 +28,8 @@ export default function Login() {
     setLoading(true)
     try {
       await login(form.cedula, form.password)
+      // Mostrar el loader al menos 5 segundos para que se vea el GIF
+      await new Promise(resolve => setTimeout(resolve, 2000))
       toast.success('¡Bienvenido a MonkApp!')
       navigate('/')
     } catch (err) {
@@ -49,7 +55,7 @@ export default function Login() {
             width: 72, height: 72, borderRadius: 20, margin: '0 auto 16px',           
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <img src={logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
+            <img src={config?.modoOscuro ? logo1 : logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
           </div>
          
           <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Inicia sesión en tu cuenta</p>
@@ -75,10 +81,27 @@ export default function Login() {
             background: loading ? '#A5A0FF' : '#6C63FF',
             color: '#fff', border: 'none', borderRadius: 12,
             fontSize: 15, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
           }}>
-            {loading ? 'Ingresando...' : 'Iniciar sesión'}
+            {loading ? <Spinner size={20} useGif /> : 'Iniciar sesión'}
           </button>
         </form>
+        {loading && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 999,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <div style={{
+              padding: 28, borderRadius: 999,
+              background: 'radial-gradient(circle at center, rgb(255, 255, 255), rgb(255, 255, 255) 60%, transparent 85%)',
+              boxShadow: '0 0 60px rgb(221, 221, 221)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <Spinner useGif size={200} />
+            </div>
+          </div>
+        )}
 
         <p style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: 'var(--text-secondary)' }}>
           ¿No tienes cuenta?{' '}

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useConfig } from '../../context/ConfigContext'
 import logo from '../../img/logo.png'
+import logo1 from '../../img/logo1.png'
+import nombreApp from '../../img/MonkAppI.png'
 import {
   LayoutDashboard, Users, Package, ShoppingCart,
   Wallet, Settings, LogOut, Menu, X, ChevronRight
@@ -18,6 +21,7 @@ const NAV = [
 
 export default function Layout({ children }) {
   const { usuario, logout } = useAuth()
+  const { config } = useConfig()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
@@ -47,16 +51,21 @@ export default function Layout({ children }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 40, height: 40, borderRadius: 12,
-              background: 'linear-gradient(135deg,var(--primary),var(--secondary))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20
             }}>
-              <img src={logo} alt="MonkApp logo" style={{ width: '80%', height: '80%', objectFit: 'contain', borderRadius: 8 }} />
+              {/* Usa el logo correcto según el modo (oscuro/claro) */}
+              <img src={
+                config?.modoOscuro ? logo1 : logo
+              } alt="MonkApp logo" style={{ width: '900%', height: '200%', objectFit: 'contain', borderRadius: 8 }} />
+              
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: 17, color: 'var(--primary)', lineHeight: 1.1 }}>
-                MonkApp
+                {/* Nombre de la aplicación */}
+                <img src={nombreApp} alt="Nombre de la aplicación" style={{ width: 100, height: 30, objectFit: 'contain' }} />
               </div>
+
               <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
                 Tu negocio organizado
               </div>
@@ -84,26 +93,29 @@ export default function Layout({ children }) {
         </nav>
 
         {/* User info */}
-        <div style={{ padding: '12px 10px 16px', borderTop: '1px solid var(--border)' }}>
-          <div style={{
-            padding: '10px 14px', borderRadius: 10, background: 'var(--bg)', marginBottom: 6
-          }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', overflow: 'hidden',
-                          textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {usuario?.nombre}
+        <div style={{ padding: '12px 10px 16px', borderTop: '1px solid var(--border)'}}>
+          <div style={{padding: '10px 14px', borderRadius: 10, background: 'var(--bg)', marginBottom: 6, border: '1.5px solid var(--primary)', display: 'flex', gap: 4}}>
+            <div style={{width:20}}>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
-              CC {usuario?.cedula}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text)', overflow: 'hidden',
+                            textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {usuario?.nombre}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 1 }}>
+                CC {usuario?.cedula}
+              </div>
             </div>
+            <button onClick={handleLogout} style={{
+                width: 'auto', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', borderRadius: 10, border: 'none',
+                background: 'transparent', color: 'var(--danger)', cursor: 'pointer',
+                fontWeight: 600, fontSize: 13,
+              }}>
+              <LogOut size={15} />
+            </button>
           </div>
-          <button onClick={handleLogout} style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-            padding: '10px 14px', borderRadius: 10, border: 'none',
-            background: 'transparent', color: 'var(--danger)', cursor: 'pointer',
-            fontWeight: 600, fontSize: 13,
-          }}>
-            <LogOut size={15} /> Cerrar sesión
-          </button>
+              
         </div>
       </aside>
 
@@ -126,7 +138,7 @@ export default function Layout({ children }) {
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src={logo} alt="MonkApp logo" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+            <img src={config?.modoOscuro ? logo1 : logo} alt="MonkApp logo" style={{ width: 20, height: 20, objectFit: 'contain' }} />
             <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--primary)' }}>MonkApp</span>
           </div>
         </header>

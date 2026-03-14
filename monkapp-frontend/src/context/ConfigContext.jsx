@@ -69,18 +69,54 @@ const applyThemeColors = (config) => {
 export function ConfigProvider({ children }) {
   const [config, setConfig] = useState(null)
   const [loadingConfig, setLoadingConfig] = useState(true)
+  const [error, setError] = useState(null)
+
+  const loadConfig = async () => {
+    setLoadingConfig(true)
+    setError(null)
+
+    try {
+      const r = await configuracionService.obtener()
+      setConfig(r.data)
+      applyThemeColors(r.data)
+    } catch (e) {
+      // Si el usuario existe pero no tiene configuración, creamos una base
+      if (e.response?.status === 404) {
+        const defaultConfig = {
+          modoOscuro: false,
+          notifCobro: true,
+          notifStockBajo: true,
+          notifProveedores: true,
+          modoOffline: false,
+          backupAutomatico: false,
+          twoFactor: false,
+          historialAuditoria: false,
+          colorPrimario: '#6C63FF',
+          umbralStock: 5
+        }
+
+        try {
+          const { data } = await configuracionService.actualizar(defaultConfig)
+          setConfig(data)
+          applyThemeColors(data)
+          return
+        } catch (inner) {
+          // fallback al error de creación
+          setError(inner)
+          toast.error('Error creando configuración por defecto')
+          return
+        }
+      }
+
+      setError(e)
+      toast.error('Error cargando configuración')
+    } finally {
+      setLoadingConfig(false)
+    }
+  }
 
   useEffect(() => {
-    configuracionService.obtener()
-      .then(r => {
-        setConfig(r.data)
-        applyThemeColors(r.data)
-      })
-      .catch(() => {
-        toast.error('Error cargando configuración')
-        setLoadingConfig(false)
-      })
-      .finally(() => setLoadingConfig(false))
+    loadConfig()
   }, [])
 
   const updateConfig = async (newCfg) => {
@@ -95,7 +131,7 @@ export function ConfigProvider({ children }) {
   }
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, loadingConfig }}>
+    <ConfigContext.Provider value={{ config, updateConfig, loadingConfig, error, reloadConfig: loadConfig }}>
       {children}
     </ConfigContext.Provider>
   )

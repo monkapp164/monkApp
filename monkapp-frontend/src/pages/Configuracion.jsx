@@ -59,7 +59,7 @@ const SECCIONES = [
 ]
 
 export default function Configuracion() {
-  const { config, updateConfig } = useConfig()
+  const { config, updateConfig, loadingConfig, error, reloadConfig } = useConfig()
   const [cfg, setCfg] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -85,7 +85,23 @@ export default function Configuracion() {
     } finally { setSaving(false) }
   }
 
-  if (!cfg) return <Spinner />
+  if (loadingConfig) return <Spinner fullScreen />
+  if (!cfg) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ textAlign: 'center', maxWidth: 480 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>No se pudo cargar la configuración</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 18 }}>
+          Algo salió mal al cargar los ajustes. Intenta recargar o revisa tu conexión.
+        </p>
+        <button onClick={reloadConfig} style={{
+          padding: '12px 18px', borderRadius: 10, border: 'none',
+          background: 'var(--primary)', color: '#fff', fontWeight: 700, cursor: 'pointer'
+        }}>
+          Reintentar
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div>

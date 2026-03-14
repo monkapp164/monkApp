@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authService } from '../../services'
+import { useConfig } from '../../context/ConfigContext'
 import logo from '../../img/logo.png'
+import logo1 from '../../img/logo1.png'
 import toast from 'react-hot-toast'
 
 const inputStyle = {
@@ -12,6 +14,7 @@ const inputStyle = {
 export default function Registro() {
   const [form, setForm] = useState({ cedula: '', nombre: '', correo: '', password: '' })
   const [loading, setLoading] = useState(false)
+  const { config } = useConfig()
   const navigate = useNavigate()
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -50,7 +53,7 @@ export default function Registro() {
             width: 64, height: 64, borderRadius: 18, margin: '0 auto 14px',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <img src={logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
+            <img src={config?.modoOscuro ? logo1 : logo} alt="MonkApp logo" style={{ width: '200%', height: '200%', objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 4, marginTop:'50px'}}>
             Crear cuenta
